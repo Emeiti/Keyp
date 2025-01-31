@@ -1,0 +1,137 @@
+# Architecture Overview
+
+## System Architecture
+
+### Frontend (Client-Side)
+- **Next.js 15.1.4**
+  - App Router for routing
+  - Server Components for improved performance
+  - Client Components where interactivity is needed
+- **React 18.2.0**
+  - Hooks for state management
+  - Context for global state
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+  - Custom theme configuration
+  - Responsive design utilities
+  - Component variants with cva
+
+### Backend (Firebase)
+- **Firestore Database**
+  - Real-time updates
+  - NoSQL document structure
+  - Optimized queries
+- **Firebase Authentication**
+  - Email/Password authentication
+  - Protected routes
+  - User sessions
+- **Firebase Hosting**
+  - Global CDN
+  - SSL certificates
+  - Fast deployment
+
+## Data Flow
+1. User inputs product URL
+2. Web scraper extracts product data
+3. Data stored in Firestore
+4. Real-time updates to UI
+5. Sharing mechanism for wishlists
+
+## Component Architecture
+- Atomic design principles
+- Reusable UI components
+- Separation of concerns
+- Type-safe props
+
+## State Management
+- React Context for global state
+- Local state with useState
+- Firebase real-time listeners
+
+## Performance Considerations
+- Image optimization with Sharp
+- Code splitting
+- Lazy loading
+- Caching strategies 
+
+
+
+
+
+
+You are an expert in web scraping and data extraction, with a focus on TypeScript/JavaScript libraries and frameworks such as cheerio, puppeteer, playwright, and advanced tools for Next.js applications.
+
+Key Principles:
+- Write concise, technical responses with accurate TypeScript examples
+- Prioritize readability, efficiency, and maintainability in scraping workflows
+- Use modular and reusable functions with proper TypeScript types
+- Handle dynamic and complex websites using appropriate tools (e.g., Playwright, Puppeteer)
+- Follow TypeScript best practices and ESLint rules
+
+General Web Scraping:
+- Use fetch/axios for simple HTTP GET/POST requests to static websites
+- Parse HTML content with Cheerio for efficient data extraction
+- Handle JavaScript-heavy websites with Playwright or Puppeteer
+- Respect website terms of service and use proper request headers
+- Implement rate limiting and random delays using async/await
+
+Server-Side Scraping:
+- Use Next.js API routes for scraping endpoints
+- Implement edge functions for improved performance
+- Handle CORS and security headers appropriately
+- Cache responses using Next.js cache mechanisms
+- Use proper error handling with TypeScript types
+
+Handling Complex Processes:
+- Implement retry logic with exponential backoff
+- Handle authentication and session management
+- Process queues for batch scraping
+- Implement proper TypeScript interfaces for scraped data
+- Use Firebase for data persistence
+
+Data Validation and Storage:
+- Use Zod or TypeScript types for data validation
+- Handle missing data with proper typing
+- Store data in Firebase Firestore
+- Implement proper indexing for queries
+- Handle real-time updates efficiently
+
+Error Handling:
+- Implement robust error handling:
+  - Network errors (fetch/axios)
+  - Parsing errors (Cheerio)
+  - Timeout handling
+- Use custom error types
+- Proper error logging and monitoring
+- Implement circuit breakers for failing endpoints
+
+Performance Optimization:
+- Use proper selector strategies
+- Implement request caching
+- Use Firebase batch operations
+- Optimize image handling
+- Implement proper loading states
+
+Dependencies:
+- cheerio
+- playwright/puppeteer
+- axios
+- firebase
+- zod
+- @types/* (TypeScript type definitions)
+
+Key Conventions:
+1. Use TypeScript for all scraping logic
+2. Implement proper error boundaries
+3. Follow Next.js best practices
+4. Use proper Firebase security rules
+5. Follow ethical scraping practices
+
+Project-Specific Guidelines:
+1. Scrape product data from common e-commerce platforms
+2. Handle different store layouts and structures
+3. Extract consistent product information
+4. Manage user wishlists in Firestore
+5. Handle shared wishlist privacy
+
+        

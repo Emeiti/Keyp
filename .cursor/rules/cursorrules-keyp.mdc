@@ -1,0 +1,189 @@
+---
+description: Project overview and technoligies used
+globs: 
+---
+# Architecture Overview
+
+## System Architecture
+
+### Frontend (Client-Side)
+- **Next.js 15.1.4**
+  - App Router for routing
+  - Server Components for improved performance
+  - Client Components for interactive search
+- **React 18.2.0**
+  - Hooks for state management
+  - Context for global state
+  - TypeScript for type safety
+- **Tailwind CSS for styling**
+  - Custom theme configuration
+  - Responsive design utilities
+  - Component variants with `cva`
+- **Algolia for lightning-fast search**
+  - Instant search results
+  - Faceted filtering
+  - Typo tolerance
+
+### Backend (Firebase)
+- **Firestore Database**
+  - Store information storage
+  - Category management
+  - Product/service indexing
+  - Store-specific backend access for editing info, categories, and brands
+  - Gift idea and Tilboð integration
+  - User activity tracking for search and selection analytics
+- **Firebase Authentication**
+  - Store owner authentication
+  - Admin dashboard access
+  - Protected routes
+- **Firebase Storage**
+  - Store images and assets
+  - Optimized image delivery
+  - CDN integration
+  - Gift idea and Tilboð image uploads
+- **Firebase Hosting**
+  - Global CDN
+  - SSL certificates
+  - Fast deployment
+
+### Additional Features & Integrations
+- **Gift Ideas & Tilboð**
+  - Store owners can add gift ideas and sales manually
+  - URL-based scraping for product details
+  - Excel upload for bulk product and sale price updates
+  - AI-powered image suggestion for uploaded products
+  - Filtering to select the most relevant images
+- **Service Hub**
+  - Seamless navigation between services (Ynskilisti, Gávuhugskot, Tilboð, Innkeyplisti, etc.)
+  - Shared authentication
+  - Consistent UI/UX
+  - Cross-service features
+- **User Analytics & Insights**
+  - Track search terms and user interactions
+  - Share insights with paying stores
+  - Google Analytics or alternative analytics provider integration
+- **Email & Notification System**
+  - Store owners can send email marketing campaigns for sales (Tilboð)
+  - Mobile app notifications for personalized offers
+  - Firebase Cloud Messaging (FCM) for real-time alerts
+- **Social Media Sharing**
+  - Stores can share products on sale and events (e.g., Black Friday) on social media platforms
+  - Pre-generated sharing templates for easy posting
+  - Social media integration for automated promotions
+
+## Data Flow
+1. Users input search terms (store names, products, categories)
+2. Algolia instant search returns relevant results
+3. Store data managed in Firestore
+4. Real-time updates for store information
+5. Integration with other services (Ynskilisti, Gávuhugskot, etc.)
+6. Store owners edit their details and add promotional content
+7. User interactions and selections are tracked for analytics
+8. Stores receive reports on user activity and sales performance
+9. Stores can share promotions and events directly to social media
+
+## Component Architecture
+- **Atomic design principles**
+- **Reusable UI components**
+- **Search-optimized components**
+- **Type-safe props**
+- **Integration components for external services**
+
+## State Management
+- **React Context for global state**
+- **Local state with `useState`**
+- **Search state management with Algolia**
+- **Firebase real-time listeners**
+
+## Performance Considerations
+- **Algolia search optimization**
+- **Image optimization with Sharp**
+- **Code splitting**
+- **Lazy loading**
+- **Aggressive caching strategies**
+- **Progressive Web App capabilities**
+
+## Key Features
+
+### Advanced Search System
+- Full-text search
+- Category filtering
+- Product type filtering
+- Location-based search
+- Instant results
+
+### Store Management
+- Store profiles
+- Product/service listings
+- Opening hours
+- Contact information
+- Premium features (enhanced visibility, photos)
+- Backend access for store editing
+- Brand and category management
+
+### Service Hub Integration
+- Seamless navigation between services
+- Shared authentication
+- Consistent UI/UX
+- Cross-service features
+
+### Gift Ideas & Tilboð
+- Store owners can add promotions
+- URL-based scraping
+- Manual input with images and descriptions
+- Excel upload for bulk processing
+- AI-driven image suggestions
+
+### User Analytics & Notifications
+- Track user searches, selections, and behavior
+- Provide store insights on search trends
+- Email marketing for store promotions
+- Mobile notifications for sales and promotions
+
+### Intelligent Shopping List (Innkeypslisti)
+- Users create grocery/shopping lists
+- Entering a store suggests on-sale items
+- Items are sorted based on store layout
+- Helps users efficiently navigate the store
+
+### Social Media Sharing
+- Stores can share sales and events on social media
+- Automated sharing templates
+- API integration with Facebook, Instagram, and Twitter
+- Direct sharing links for promotions
+
+## Dependencies
+- `algoliasearch`
+- `@algolia/instantsearch.js`
+- `firebase`
+- `zod`
+- `sharp`
+- `@types/` (TypeScript type definitions)
+- `papaparse` (for processing CSV/Excel files)
+- `tensorflow.js` (for AI-powered image matching and suggestions)
+- `cheerio` (for web scraping product details from URLs)
+- `firebase-admin` (for analytics and email notifications)
+- `react-email` (for email marketing campaigns)
+- `firebase-cloud-messaging` (for push notifications)
+- `google-analytics` (for tracking user interactions)
+- `react-share` (for social media sharing integration)
+
+## Key Conventions
+1. Use TypeScript for type safety
+2. Implement proper error boundaries
+3. Follow Next.js best practices
+4. Use proper Firebase security rules
+5. Optimize for search performance
+
+## Project-Specific Guidelines
+- Maintain fast search response times
+- Implement efficient store data management
+- Enable easy service integration
+- Provide premium store features
+- Ensure mobile-first responsive design
+- Track and analyze user interactions for business insights
+- Enable email and push notifications for sales campaigns
+- Facilitate seamless social media sharing for store promotions
+
+---
+This architecture focuses on providing a lightning-fast search experience while maintaining a scalable and maintainable codebase. The integration of Algolia for search functionality will ensure quick and relevant results, while Firebase provides a solid foundation for data storage and real-time updates. Additional AI-powered features for image suggestions will streamline product and sales listing management for store owners. User analytics, notifications, and social media sharing will enhance engagement and business value for stores.
