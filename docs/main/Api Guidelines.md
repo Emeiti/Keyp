@@ -1,5 +1,5 @@
 # API Guidelines for `api.keyp.fo`
-> Version: 1.0.0 (Last updated: 2024-03-XX)
+> Version: 1.0.0 (Last updated: 2025-02-01)
 
 ## Overview
 `api.keyp.fo` serves as the **centralized backend** for all subdomains (`ynskilisti.keyp.fo`, `gavuhugskot.keyp.fo`, `tilbod.keyp.fo`, etc.), ensuring **data consistency, shared authentication, and structured API access**.
@@ -67,3 +67,14 @@
 ---
 🚀 **For updates, refer to GitHub or Notion documentation.**
 
+## Version History
+- **1.0.0** (2025-02-01)
+  - Initial documentation
+  - Core architecture defined
+  - Development standards established
+  - API structure outlined
+
+Future versions should follow [Semantic Versioning](https://semver.org/):
+- MAJOR version for incompatible API changes
+- MINOR version for backwards-compatible functionality
+- PATCH version for backwards-compatible bug fixes

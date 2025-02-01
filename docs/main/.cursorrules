@@ -1,4 +1,5 @@
 # .cursorrules
+> Version: 1.0.0 (Last updated: 2025-02-01)
 
 ## Cursor AI Rules for Keyp.fo Development
 
@@ -13,8 +14,6 @@ This file defines how Cursor AI should assist in generating and maintaining code
 - **Optimize Firestore reads** to minimize unnecessary queries.
 
 ## **Architecture Overview**
-> Version: 1.0.0 (Last updated: 2024-03-XX)
-> Note: This file guides AI-assisted development for keyp.fo
 
 ### **Frontend (Client-Side)**
 - **Next.js 15.1.4**
@@ -131,3 +130,15 @@ Additionally, all services will use **a single Firebase Storage instance** to st
 
 ---
 🚀 **For any changes, update this document in GitHub or Notion for reference.**
+
+## Version History
+- **1.0.0** (2025-02-01)
+  - Initial documentation
+  - Core architecture defined
+  - Development standards established
+  - API structure outlined
+
+Future versions should follow [Semantic Versioning](https://semver.org/):
+- MAJOR version for incompatible API changes
+- MINOR version for backwards-compatible functionality
+- PATCH version for backwards-compatible bug fixes
