@@ -1,0 +1,17 @@
+{
+    "name": "@keyp/docs",
+    "version": "1.0.0",
+    "description": "Main documentation for Keyp.fo services",
+    "main": "main/development-guidelines.md",
+    "files": [
+      "main/development-guidelines.md",
+      "main/api-guidelines.md",
+      "main/.cursorrules"
+    ],
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Emeiti/Keyp.git"
+    },
+    "license": "MIT"
+  }
+  
