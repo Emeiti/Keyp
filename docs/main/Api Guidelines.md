@@ -1,5 +1,5 @@
 # API Guidelines for `api.keyp.fo`
-> Version: 1.0.0 (Last updated: 2025-02-01)
+> Version: 1.0.3 (Last updated: 2025-02-03)
 
 ## Overview
 `api.keyp.fo` serves as the **centralized backend** for all subdomains (`ynskilisti.keyp.fo`, `gavuhugskot.keyp.fo`, `tilbod.keyp.fo`, etc.), ensuring **data consistency, shared authentication, and structured API access**.

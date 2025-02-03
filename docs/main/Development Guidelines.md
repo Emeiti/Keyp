@@ -1,5 +1,5 @@
 # Development Guidelines
-> Version: 1.0.0 (Last updated: 2025-02-01)
+> Version: 1.0.3 (Last updated: 2025-02-03)
 
 ## Overview
 This document defines the **development standards** for all subdomains under `keyp.fo`, ensuring consistency across services like **Ynskilisti, Gávuhugskot, Tilboð, Innkeypslisti**, and others. By following these guidelines, we ensure a scalable, modular, and efficient development process, even when using AI-assisted coding.
@@ -83,16 +83,25 @@ project-root/
   - Test using Chrome DevTools' device simulator and real mobile devices.
 
 ## Documentation Sync Across Subdomains
-- The **Development Guidelines and Cursor Rules** are stored in the **`/docs` folder of the main repository (`keyp.git`)** and used as an **NPM package (`@keyp/docs`)** in all subdomains.
-- Each subdomain must install the documentation package:
-  ```bash
-  npm install @keyp/docs
-  ```
-- To update the documentation package:
-  ```bash
-  npm update @keyp/docs
-  ```
-- This ensures **all subdomains have the latest development standards**.
+
+### Overview
+The **Development Guidelines and Cursor Rules** are stored in the **`/docs/main/` folder of the main repository (`keyp.git`)**. All subdomains should reference these documents directly from the main repository.
+
+### Accessing Documentation
+The documentation is available in the main Keyp repository:
+- `docs/main/development-guidelines.md`
+- `docs/main/api-guidelines.md`
+- `docs/main/.cursorrules`
+
+### Updating Documentation
+1. Make changes to the documentation files in the main repository
+2. Commit and push changes to the main branch
+3. All subdomains will automatically have access to the latest documentation through Git
+
+🔹 This ensures all subdomains stay in sync with the latest documentation!
+
+---
+**For version history and changes, see the package.json version number.**
 
 ---
 🚀 **For any changes, update this document in GitHub or Notion for reference.**
@@ -104,6 +113,11 @@ project-root/
   - Core architecture defined
   - Development standards established
   - API structure outlined
+- **1.0.1** (2025-02-01)
+  - Documentation sync strategy implemented
+  - NPM package configuration added
+  - Version control workflow defined
+
 
 Future versions should follow [Semantic Versioning](https://semver.org/):
 - MAJOR version for incompatible API changes
