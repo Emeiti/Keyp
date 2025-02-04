@@ -43,7 +43,6 @@ const stores = [
       features: {
         wishlist: true,
         giftIdeas: true,
-        giftCards: true,
       },
       limits: {
         giftIdeasCount: 100,
@@ -80,7 +79,6 @@ const stores = [
       features: {
         wishlist: true,
         giftIdeas: true,
-        giftCards: false,
       },
       limits: {
         giftIdeasCount: 50,
@@ -116,7 +114,6 @@ const stores = [
       features: {
         wishlist: true,
         giftIdeas: true,
-        giftCards: true,
       },
       limits: {
         giftIdeasCount: 100,

@@ -1,143 +1,88 @@
 # API Guidelines for `api.keyp.fo`
+> Version: 1.0.3 (Last updated: 2025-02-03)
 
 ## Overview
-`api.keyp.fo` serves as the **centralized backend** for all subdomains (`ynskilisti.keyp.fo`, `gavuhugskot.keyp.fo`, `tilbod.keyp.fo`, etc.), ensuring **data consistency, shared authentication, and fast search capabilities**.
+`api.keyp.fo` serves as the **centralized backend** for all subdomains (`ynskilisti.keyp.fo`, `gavuhugskot.keyp.fo`, `tilbod.keyp.fo`, etc.), ensuring **data consistency, shared authentication, and structured API access**.
 
-This document outlines **how services should interact** with the API, best practices, and security measures.
+📌 **For development standards and frontend architecture, refer to the [Development Guidelines](#).**
 
-📌 **For coding standards, frontend/backend structure, and best development practices, refer to the [Cursor AI Development Guidelines](#).**
+## Core Responsibilities
+- **Store & Product Management:** Stores can add, edit, and update their product listings.
+- **User Authentication & Permissions:** Manage users, roles, and access control.
+- **Search & Data Retrieval:** Provide search results efficiently via Firestore (or Algolia if needed).
+- **Real-time Updates:** Maintain real-time store/product updates.
+- **Integration with Keyp Services:** Connects with `ynskilisti.keyp.fo`, `gavuhugskot.keyp.fo`, `tilbod.keyp.fo`, etc.
 
-## Core Technologies
-- **Frontend:**
-  - Next.js 15.1.4 (App Router + Server Components)
-  - React 18.2.0 (Hooks, Context API)
-  - TypeScript (type safety & maintainability)
-  - Tailwind CSS (consistent styling & responsive utilities)
-- **Backend:**
-  - Firebase (Firestore, Authentication, Storage, Hosting)
-  - Firestore for **initial search implementation** (cost-efficient, free-tier friendly)
-  - Algolia **optional for later phases** (if needed for advanced search)
-  - Google Analytics (User tracking & insights)
-  - Firebase Cloud Messaging (Push notifications for sales & alerts)
-- **Data Processing & AI:**
-  - TensorFlow.js (AI-driven image recommendations)
-  - Papaparse (CSV/Excel handling for bulk uploads)
-  - Cheerio (Web scraping for sales listings)
-- **Social Media Integration:**
-  - React-Share (Sharing products, sales, & events)
-  - Social Media APIs (Facebook, Instagram, Twitter integration)
-
-## Database Structure
-### **Firestore Collections & Documents**
-- **Wishlists (`wishlists`)**
-  - `id`: string
-  - `userId`: string (Creator of the wishlist)
-  - `title`: string
-  - `createdAt`: timestamp
-  - `expiresAt`: timestamp (Auto-delete after a period)
-  - `shareableLink`: string (Publicly accessible link to view the wishlist)
-  - `visibility`: 'private' | 'public'
-
-- **Wishlist Items (`wishlist_items`)**
-  - `id`: string
-  - `wishlistId`: string (Reference to `wishlists` collection)
-  - `productId`: string (Reference to `products` collection, optional for manually added items)
-  - `name`: string
-  - `description`: string
-  - `image`: string (Stored in Firebase Storage)
-  - `price`: number
-  - `boughtBy`: string (Only visible to logged-in users who mark items as purchased)
-  - `createdAt`: timestamp
-
-- **Stores (`stores`)**
-  - `id`: string
-  - `name`: string
-  - `url`: string
-  - `active`: boolean
-  - `metadata`: object
-    - `logo`: string
-    - `hasWebshop`: boolean
-    - `hasPhysicalShop`: boolean
-    - `categories`: string[]
-    - `brands`: string[]
-  - `contact`: object
-    - `email`: string
-    - `phone`: string
-    - `address`: object
-      - `street`: string
-      - `city`: string
-      - `postalCode`: string
-    - `social`: object
-      - `facebook`: string (optional)
-      - `instagram`: string (optional)
-  - `subscription`: object
-    - `plan`: 'free' | 'basic' | 'premium'
-    - `status`: 'active' | 'expired'
-    - `features`: object
-      - `wishlist`: boolean
-      - `giftIdeas`: boolean
-      - `giftCards`: boolean
-    - `limits`: object
-      - `giftIdeasCount`: number
-
-## Wishlist Sharing & Purchase Tracking
-- **Users can create multiple wishlists**.
-- **A user must create an account to share a wishlist**.
-- **Anyone with the shareable link can view the wishlist**.
-- **Wishlist owners CANNOT see what has been purchased** (to maintain the element of surprise).
-- **Logged-in users can see purchased items** and select what they buy.
-- **Purchased items are only visible to other logged-in users who view the wishlist**.
-- **Wishlist auto-deletes after a predefined period**.
-
-## Subscription & Feature Access
-- **Stores can have different subscription levels:**
-  - `free`: Basic listing in store directory.
-  - `basic`: Ability to list products & limited gift ideas.
-  - `premium`: Full feature access, including adding multiple gift ideas and sales promotions.
-- **Feature-based access control ensures that:**
-  - Stores on free plans have limited visibility.
-  - Premium stores appear higher in search results and recommendations.
+## API Structure
+- **Base URL:** `https://api.keyp.fo/v1/`
+- **Endpoints:**
+  - `/stores` → Store management
+    - GET: List stores with filtering
+    - POST: Create store (admin only)
+    - PUT: Update store (store owner/admin)
+  - `/stores/{id}/products` → Product management
+    - GET: List store products
+    - POST: Add product (store owner/admin)
+  - `/wishlists` → Wishlist management
+    - GET: Get user wishlists
+    - POST: Create wishlist
+    - PUT: Update wishlist
+  - `/wishlists/{id}/viewers` → Wishlist sharing
+    - POST: Add viewer
+    - DELETE: Remove viewer
+  - `/giftideas` → Gift ideas management
+    - GET: List gift ideas with filtering
+    - POST: Create gift idea (store owner)
 
 ## Authentication & Security
-- **JWT-based authentication (Firebase Auth)** – Required for most endpoints.
-- **Role-based access control (RBAC):**
-  - **Admin** – Can modify all data.
-  - **Store Owner** – Can edit their store & products.
-  - **User** – Can create wishlists, view shared lists, and mark items as purchased.
-- **API Rate Limits** – Prevent abuse by limiting requests per IP.
-- **CORS Policy** – Allows only whitelisted domains (`keyp.fo`, subdomains).
+- **Authentication:** Uses Firebase Authentication (JWT-based tokens).
+- **User Roles:**
+  - `admin` → Full system access.
+  - `store_owner` → Can manage store data.
+  - `user` → Can create wishlists, add gift ideas, etc.
+- **Security Policies:**
+  - Firestore security rules restrict unauthorized access.
+  - API rate limiting to prevent abuse.
+  - CORS restrictions to only allow whitelisted domains.
 
-## Performance Optimization
-- **Lazy Loading & Code Splitting** (Dynamic Imports for UI components).
-- **Image Optimization with Sharp** (Automatic resizing & compression).
-- **Aggressive Caching Strategies** (Firestore reads optimization).
-- **Progressive Web App (PWA) Capabilities).
+## Data Flow & Performance Optimization
+1. **User Requests Data:** The frontend queries `api.keyp.fo`.
+2. **Data Processing:** Firestore retrieves data, optionally filtered by Algolia.
+3. **Optimized Search & Caching:**
+   - Firestore used for real-time reads/writes.
+   - Algolia for **fast, typo-tolerant search** (optional if needed).
+   - Redis caching layer **if necessary** for heavy API calls.
+4. **Response Delivery:** API returns results in JSON format.
 
-## User Engagement Features
-- **Email Marketing** (React-Email + Firebase Functions for scheduled newsletters).
-- **Push Notifications** (FCM for store updates & sales alerts).
-- **Social Sharing** (Pre-generated templates for sharing deals & events).
+## API Rate Limits
+- **Standard Users:** 1000 requests per hour.
+- **Store Owners:** 5000 requests per hour.
+- **Admins:** Unlimited access.
+- Rate limits reset every hour.
 
-## Developer Workflow & AI Coding Assistance
-1. **Use Cursor AI for AI-generated code** but follow these standards:
-   - Review AI-generated code before committing.
-   - Ensure consistency with TypeScript types.
-   - Avoid duplicate or unnecessary components.
-2. **Version Control (GitHub)**
-   - Main branch: Stable releases.
-   - Dev branch: Feature development.
-   - Feature branches: Separate per subdomain.
-3. **Deployment Process**
-   - Use **Vercel for frontend deployment**.
-   - Firebase Hosting for backend services.
-   - Automate deployments via **GitHub Actions**.
+## Error Handling
+- **400 Bad Request:** Invalid request parameters.
+- **401 Unauthorized:** User authentication failed.
+- **403 Forbidden:** User does not have permission.
+- **404 Not Found:** Resource does not exist.
+- **500 Internal Server Error:** Unexpected server failure.
 
-## Final Notes
-This guideline ensures that **all subdomains remain modular, scalable, and cost-efficient**. We prioritize **Firestore-based search first**, with an **optional transition to Algolia** if needed. Gift ideas are **initially limited to store-added products**, with potential expansion to user-generated content later. Stores are required to **narrow down their target audience** to improve product visibility and relevance in searches.
-
-Additionally, all services will use **a single Firebase Storage instance** to store images in a compressed format, ensuring **cost efficiency** while keeping performance high. Future scaling options include splitting storage if needed.
-
-📌 **For frontend and development standards, refer to the [Development Guidelines](#).**
+## Future Enhancements
+- **Webhook Support:** Notify stores when wishlist items are added.
+- **GraphQL API Layer:** Allow flexible queries for optimized data retrieval.
+- **AI Recommendations:** Suggest gift ideas based on purchase history.
 
 ---
-🚀 **For any changes, update this document in GitHub or Notion for reference.**
+🚀 **For updates, refer to GitHub or Notion documentation.**
+
+## Version History
+- **1.0.0** (2025-02-01)
+  - Initial documentation
+  - Core architecture defined
+  - Development standards established
+  - API structure outlined
+
+Future versions should follow [Semantic Versioning](https://semver.org/):
+- MAJOR version for incompatible API changes
+- MINOR version for backwards-compatible functionality
+- PATCH version for backwards-compatible bug fixes

@@ -29,7 +29,6 @@ export interface Store {
     features: {
       wishlist: boolean;
       giftIdeas: boolean;
-      giftCards: boolean;
     };
     limits: {
       giftIdeasCount: number;

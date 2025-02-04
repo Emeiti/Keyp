@@ -1,9 +1,28 @@
 # Development Guidelines
+> Version: 1.0.3 (Last updated: 2025-02-03)
 
 ## Overview
 This document defines the **development standards** for all subdomains under `keyp.fo`, ensuring consistency across services like **Ynskilisti, Gávuhugskot, Tilboð, Innkeypslisti**, and others. By following these guidelines, we ensure a scalable, modular, and efficient development process, even when using AI-assisted coding.
 
 📌 **For API structure, database models, and security policies, refer to the [API Guidelines for `api.keyp.fo`](#).**
+
+## Project Structure
+Each subdomain follows the same folder structure:
+```
+project-root/
+│── src/
+│   ├── components/   # UI components (imported from @keyp/ui)
+│   ├── pages/        # Page-specific components
+│   ├── hooks/        # Custom React hooks
+│   ├── services/     # API interaction & Firebase calls
+│   ├── utils/        # Helper functions
+│   ├── styles/       # Tailwind custom styles & themes
+│── public/
+│── docs/            # Development Guidelines and Cursor Rules
+│── .env.local        # Environment variables
+│── package.json
+│── next.config.js
+```
 
 ## Core Technologies
 - **Frontend:**
@@ -11,108 +30,96 @@ This document defines the **development standards** for all subdomains under `ke
   - React 18.2.0 (Hooks, Context API)
   - TypeScript (type safety & maintainability)
   - Tailwind CSS (consistent styling & responsive utilities)
+  - **ShadCN UI** for standardized UI components
+  - **Lucide.dev icons (included via ShadCN UI)** for a consistent icon set
 - **Backend:**
   - Firebase (Firestore, Authentication, Storage, Hosting)
   - Firestore for **initial search implementation** (cost-efficient, free-tier friendly)
-  - Algolia **optional for later phases** (if needed for advanced search)
-  - Google Analytics (User tracking & insights)
   - Firebase Cloud Messaging (Push notifications for sales & alerts)
+  - Google Analytics (User tracking & insights)
 - **Data Processing & AI:**
-  - TensorFlow.js (AI-driven image recommendations)
   - Papaparse (CSV/Excel handling for bulk uploads)
   - Cheerio (Web scraping for gift ideas & sales listings)
+  - TensorFlow.js (AI-driven image recommendations)
 - **Social Media Integration:**
   - React-Share (Sharing products, sales, & events)
   - Social Media APIs (Facebook, Instagram, Twitter integration)
 
-## UI Component Management (Using NPM Package for UI)
-To ensure a **consistent UI across all subdomains**, UI components are stored in a **separate repository (`Keyp-ui.git`)** and used as an **NPM package (`@keyp/ui`)** in all subdomains.
+## Code Style & Best Practices
+- **TypeScript:**
+  - Use strict typing (`strict` mode enabled in `tsconfig.json`).
+  - Define reusable interfaces and types in `src/types/`.
+- **React & Next.js:**
+  - Prefer function components with hooks (`useState`, `useEffect`, `useReducer`).
+  - Use `useContext` for global state management.
+  - Avoid unnecessary re-renders by memoizing with `useMemo` and `useCallback`.
+- **Styling:**
+  - Use Tailwind CSS utility classes.
+  - Keep styles consistent with the **ShadCN UI theme**.
+- **Performance Optimization:**
+  - Lazy load images (`next/image` with `priority` where necessary).
+  - Use **code splitting** and dynamic imports (`import('...')`).
+  - Optimize database queries to reduce Firestore reads.
+- **Error Handling:**
+  - Wrap components in error boundaries where needed.
+  - Use Firebase security rules to restrict access properly.
+  - Handle API errors gracefully with user-friendly messages.
 
-### **How to Use the Shared UI Package (`@keyp/ui`):**
-1. Install the UI package in your subdomain project:
-   ```bash
-   npm install @keyp/ui
-   ```
-2. Import components in your code:
-   ```tsx
-   import { Button } from "@keyp/ui";
-   ```
-3. When `Keyp-ui.git` is updated, update the package in your subdomain:
-   ```bash
-   npm update @keyp/ui
-   ```
-4. Restart your development server:
-   ```bash
-   npm run dev
-   ```
+## Mobile-Friendly Design
+- **Mobile-first approach:** Design should prioritize smaller screens first, then scale up.
+- **Responsive Grid System:** Use Tailwind CSS utilities like `grid`, `flex`, `w-full`, `max-w`, and `container` for responsive layouts.
+- **Media Queries:** Use Tailwind breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) to adapt layouts.
+- **Touch-Friendly Elements:**
+  - Buttons and clickable areas should be at least **48px** in height for accessibility.
+  - Use proper spacing (`p-4`, `m-2`) to prevent accidental taps.
+- **Navigation Adjustments:**
+  - Mobile-friendly navigation bars (hamburger menus or bottom navbars when appropriate).
+  - Avoid hover-dependent interactions; ensure all features are **tap-friendly**.
+- **Image Optimization:**
+  - Use responsive image sizes (`w-full sm:w-1/2 lg:w-1/3`).
+  - Prefer WebP format for better performance.
+- **Testing on Multiple Devices:**
+  - Ensure smooth UX on **iOS, Android, tablets, and desktops**.
+  - Test using Chrome DevTools' device simulator and real mobile devices.
 
-📌 **UI updates are managed in `Keyp-ui.git`. Subdomains only reference the latest version via NPM, avoiding direct UI file changes.**
+## Documentation Sync Across Subdomains
 
-## Project Structure
-Each subdomain follows the same folder structure:
-```
-project-root/
-│── src/
-│   ├── components/   # Reusable UI components (imported from @keyp/ui)
-│   ├── pages/        # Page-specific components
-│   ├── hooks/        # Custom React hooks
-│   ├── services/     # API interaction & Firebase calls
-│   ├── utils/        # Helper functions
-│   ├── styles/       # Tailwind custom styles & themes
-│── public/
-│── .env.local        # Environment variables
-│── package.json
-│── next.config.js
-```
+### Overview
+The **Development Guidelines and Cursor Rules** are stored in the **`/docs/main/` folder of the main repository (`keyp.git`)**. All subdomains should reference these documents directly from the main repository.
 
-## Subdomains & Their Functions
-- `keyp.fo` → **Main hub** (global search, service navigation, store discovery)
-- `ynskilisti.keyp.fo` → **Wishlists & gift registries**
-- `gavuhugskot.keyp.fo` → **Gift ideas & recommendations**
-- `tilbod.keyp.fo` → **Sales, promotions, & discounts**
-- `innkeypslisti.keyp.fo` → **Shopping list & in-store navigation**
+### Accessing Documentation
+The documentation is available in the main Keyp repository:
+- `docs/main/development-guidelines.md`
+- `docs/main/api-guidelines.md`
+- `docs/main/.cursorrules`
 
-## State Management
-- **Global state:** React Context for authentication & user data.
-- **Local state:** `useState` & `useReducer` for component-specific data.
-- **Search state:** Initially managed via **Firestore queries**, expandable to Algolia.
-- **Real-time updates:** Firestore listeners for live updates in the UI.
+### Updating Documentation
+1. Make changes to the documentation files in the main repository
+2. Commit and push changes to the main branch
+3. All subdomains will automatically have access to the latest documentation through Git
 
-## Performance & Optimization
-- **Start with Firestore for search** (minimizing costs at the start).
-- **Lazy Loading & Code Splitting** (Dynamic Imports for UI components).
-- **Image Optimization with Sharp** (Automatic resizing & compression).
-- **Aggressive Caching Strategies** (Firestore reads optimization).
-- **Progressive Web App (PWA) Capabilities**.
+🔹 This ensures all subdomains stay in sync with the latest documentation!
 
-## Developer Workflow & AI Coding Assistance
-1. **Use Cursor AI for AI-generated code** but follow these standards:
-   - Review AI-generated code before committing.
-   - Ensure consistency with TypeScript types.
-   - Avoid duplicate or unnecessary components.
-2. **Version Control (GitHub)**
-   - Main branch: Stable releases.
-   - Dev branch: Feature development.
-   - Feature branches: Separate per subdomain.
-3. **Deployment Process**
-   - Use **Vercel for frontend deployment**.
-   - Firebase Hosting for backend services.
-   - Automate deployments via **GitHub Actions**.
-
-## Security Best Practices
-- **Firestore Security Rules**:
-  - Restrict read/write access based on authentication roles.
-- **Environment Variables Management**:
-  - Store API keys securely in `.env.local`.
-- **Data Protection & GDPR Compliance**:
-  - Provide users with data export & deletion options.
-
-## Final Notes
-This guideline ensures that **all subdomains remain modular, scalable, and cost-efficient**. We prioritize **Firestore-based search first**, with an **optional transition to Algolia** if needed.
-
-Additionally, all services will use **a single Firebase Storage instance** to store images in a compressed format, ensuring **cost efficiency** while keeping performance high. Future scaling options include splitting storage if needed.
-
-📌 **For API structure, database models, and security policies, refer to the [API Guidelines for `api.keyp.fo`](#).**
+---
+**For version history and changes, see the package.json version number.**
 
 ---
 🚀 **For any changes, update this document in GitHub or Notion for reference.**
+
+---
+## Version History
+- **1.0.0** (2025-02-01)
+  - Initial documentation
+  - Core architecture defined
+  - Development standards established
+  - API structure outlined
+- **1.0.1** (2025-02-01)
+  - Documentation sync strategy implemented
+  - NPM package configuration added
+  - Version control workflow defined
+
+
+Future versions should follow [Semantic Versioning](https://semver.org/):
+- MAJOR version for incompatible API changes
+- MINOR version for backwards-compatible functionality
+- PATCH version for backwards-compatible bug fixes

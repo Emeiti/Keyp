@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+    
+    function isStoreOwner(storeId) {
+      return isAuthenticated() && 
+        request.auth.token.role == 'store_owner' && 
+        request.auth.token.storeId == storeId;
+    }
+
+    // Store rules
+    match /stores/{storeId} {
+      allow read: if true;  // Public can read store info
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isStoreOwner(storeId);
+      allow delete: if isAdmin();
+
+      // Products subcollection
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if isAdmin() || isStoreOwner(storeId);
+      }
+    }
+
+    // Wishlist rules
+    match /wishlists/{wishlistId} {
+      allow read: if 
+        resource.data.userId == null || // Public wishlist
+        resource.data.userId == request.auth.uid || // Owner
+        exists(/databases/$(database)/documents/wishlists/$(wishlistId)/viewers/$(request.auth.uid)); // Shared viewer
+      
+      allow create: if true; // Anyone can create a wishlist
+      allow update: if resource.data.userId == request.auth.uid;
+      allow delete: if resource.data.userId == request.auth.uid;
+
+      // Viewers subcollection
+      match /viewers/{userId} {
+        allow read: if request.auth.uid == userId;
+        allow write: if resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Gift Ideas rules
+    match /giftIdeas/{giftIdeaId} {
+      allow read: if true;
+      allow create: if 
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/stores/$(request.resource.data.storeId)) &&
+        (isAdmin() || isStoreOwner(request.resource.data.storeId));
+      allow update: if 
+        isAuthenticated() && 
+        (isAdmin() || isStoreOwner(resource.data.storeId));
+      allow delete: if 
+        isAuthenticated() && 
+        (isAdmin() || isStoreOwner(resource.data.storeId));
+    }
+  }
+} 
