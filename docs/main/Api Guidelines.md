@@ -16,23 +16,15 @@
 ## API Structure
 - **Base URL:** `https://api.keyp.fo/v1/`
 - **Endpoints:**
-  - `/stores` → Store management
-    - GET: List stores with filtering
-    - POST: Create store (admin only)
-    - PUT: Update store (store owner/admin)
-  - `/stores/{id}/products` → Product management
-    - GET: List store products
-    - POST: Add product (store owner/admin)
-  - `/wishlists` → Wishlist management
-    - GET: Get user wishlists
-    - POST: Create wishlist
-    - PUT: Update wishlist
-  - `/wishlists/{id}/viewers` → Wishlist sharing
-    - POST: Add viewer
-    - DELETE: Remove viewer
-  - `/giftideas` → Gift ideas management
-    - GET: List gift ideas with filtering
-    - POST: Create gift idea (store owner)
+  - `/stores` → Retrieve store information.
+  - `/stores/{id}` → Retrieve a specific store.
+  - `/products` → Retrieve products across stores.
+  - `/products/{id}` → Retrieve product details.
+  - `/wishlist` → User wishlists (for `ynskilisti.keyp.fo`).
+  - `/giftideas` → Store-provided gift ideas.
+  - `/sales` → Retrieve current store sales (`tilbod.keyp.fo`).
+  - `/auth/register` → User registration.
+  - `/auth/login` → User login.
 
 ## Authentication & Security
 - **Authentication:** Uses Firebase Authentication (JWT-based tokens).

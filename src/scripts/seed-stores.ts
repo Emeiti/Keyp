@@ -1,12 +1,22 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env.local
+dotenv.config({ path: '.env.local' });
 
 // Initialize Firebase Admin
+if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 
+    !process.env.FIREBASE_CLIENT_EMAIL || 
+    !process.env.FIREBASE_PRIVATE_KEY) {
+  throw new Error('Missing Firebase Admin credentials in environment variables');
+}
+
 initializeApp({
   credential: cert({
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   }),
 });
 
