@@ -1,0 +1,61 @@
+openapi: 3.0.0
+info:
+  title: Keyp.fo API
+  version: '1.0.0'
+  description: API for Keyp.fo services including stores, products, wishlists, and gift ideas
+
+servers:
+  - url: https://api.keyp.fo/v1
+    description: Production API
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /stores:
+    get:
+      summary: List all stores
+      parameters:
+        - in: query
+          name: active
+          schema:
+            type: boolean
+        - in: query
+          name: hasWebshop
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of stores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreList'
+
+  /wishlists:
+    get:
+      summary: Get user's wishlists
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User's wishlists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishlistList'
+
+components:
+  schemas:
+    Store:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        # ... other properties as per Database Structure 

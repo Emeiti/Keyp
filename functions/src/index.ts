@@ -7,11 +7,41 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { onRequest } from 'firebase-functions/v2/https';
+import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import express from 'express';
+import cors from 'cors';
 import { Request, Response } from 'express';
 
+// Extend Request type to include user
+interface AuthRequest extends Request {
+  user?: admin.auth.DecodedIdToken;
+}
+
+// Initialize Firebase Admin
 admin.initializeApp();
+
+const app = express();
+app.use(cors({ origin: true }));
+
+// Middleware to verify Firebase token
+const auth = async (req: AuthRequest, res: Response, next: any) => {
+  try {
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    if (!token) throw new Error('No token provided');
+    
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    res.status(401).json({ 
+      error: { 
+        code: 'UNAUTHORIZED',
+        message: 'Invalid or missing authentication token'
+      }
+    });
+  }
+};
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -65,10 +95,7 @@ interface Store {
 }
 
 // Test data setup endpoint
-export const setupTestData = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.post('/setupTestData', async (req: Request, res: Response) => {
   try {
     // Add stores
     const stores = [
@@ -152,35 +179,71 @@ export const setupTestData = onRequest({
   }
 });
 
-// Stores API endpoint
-export const getStores = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+// Store endpoints
+app.get('/', async (req: Request, res: Response) => {
   try {
-    console.log('Using Firestore host:', process.env.FIRESTORE_EMULATOR_HOST ? 'Emulator' : 'Production');
-    
-    const storesSnapshot = await admin.firestore()
-      .collection('stores')
-      .get();
-
-    const stores = storesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
+    const storesRef = admin.firestore().collection('stores');
+    const snapshot = await storesRef.get();
+    const stores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(stores);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ 
+      error: { 
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch stores'
+      }
+    });
+  }
+});
+
+// Wishlist endpoints (require authentication)
+app.get('/wishlists', auth, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.uid) throw new Error('User not authenticated');
+    
+    const wishlistsRef = admin.firestore().collection('wishlists');
+    const query = wishlistsRef.where('userId', '==', req.user.uid);
+    const snapshot = await query.get();
+    const wishlists = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(wishlists);
+  } catch (error) {
+    res.status(500).json({ 
+      error: { 
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch wishlists'
+      }
+    });
+  }
+});
+
+// Gift ideas endpoints
+app.get('/giftideas', async (req: Request, res: Response) => {
+  try {
+    const { occasion, maxPrice } = req.query;
+    let giftIdeasRef = admin.firestore().collection('giftIdeas');
+    
+    if (occasion) {
+      giftIdeasRef = giftIdeasRef.where('occasions', 'array-contains', occasion) as admin.firestore.CollectionReference;
+    }
+    if (maxPrice) {
+      giftIdeasRef = giftIdeasRef.where('price', '<=', Number(maxPrice)) as admin.firestore.CollectionReference;
+    }
+    
+    const snapshot = await giftIdeasRef.get();
+    const ideas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(ideas);
+  } catch (error) {
+    res.status(500).json({ 
+      error: { 
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch gift ideas'
+      }
+    });
   }
 });
 
 // Get store statistics
-export const getStoreStats = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.get('/getStoreStats', async (req, res) => {
   try {
     const storesSnapshot = await admin.firestore()
       .collection('stores')
@@ -234,10 +297,7 @@ export const getStoreStats = onRequest({
 });
 
 // Search stores with filters
-export const searchStores = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.get('/searchStores', async (req, res) => {
   try {
     const {
       category,
@@ -304,10 +364,7 @@ export const searchStores = onRequest({
 });
 
 // Advanced search stores endpoint
-export const advancedSearch = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.get('/advancedSearch', async (req, res) => {
   try {
     const {
       // Basic filters
@@ -444,10 +501,7 @@ export const advancedSearch = onRequest({
 });
 
 // Get detailed store statistics
-export const getDetailedStats = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.get('/getDetailedStats', async (req, res) => {
   try {
     const snapshot = await admin.firestore()
       .collection('stores')
@@ -531,10 +585,7 @@ export const getDetailedStats = onRequest({
 });
 
 // List all available functions
-export const listFunctions = onRequest({ 
-  region: 'europe-west1',
-  cors: true
-}, async (req: Request, res: Response) => {
+app.get('/listFunctions', async (req, res) => {
   try {
     // Get the project ID from the environment
     const projectId = process.env.GCLOUD_PROJECT;
@@ -556,3 +607,12 @@ export const listFunctions = onRequest({
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// Export the Express app as Firebase Functions
+export const getStores = functions.https.onRequest(app);
+export const searchStores = functions.https.onRequest(app);
+export const getStoreStats = functions.https.onRequest(app);
+export const advancedSearch = functions.https.onRequest(app);
+export const getDetailedStats = functions.https.onRequest(app);
+export const listFunctions = functions.https.onRequest(app);
+export const setupTestData = functions.https.onRequest(app);

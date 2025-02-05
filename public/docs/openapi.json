@@ -1,0 +1,324 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Keyp.fo API",
+    "version": "1.0.0",
+    "description": "API for Keyp.fo services including stores, products, wishlists, and gift ideas"
+  },
+  "servers": [
+    {
+      "url": "https://api-keyp-fo.web.app/v1",
+      "description": "Production API"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Firebase JWT token"
+      }
+    },
+    "schemas": {
+      "Store": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "active": { "type": "boolean" },
+          "hasWebshop": { "type": "boolean" },
+          "hasPhysicalShop": { "type": "boolean" },
+          "category": { "type": "string" },
+          "location": { "type": "string" },
+          "website": { "type": "string" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "storeId": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "category": { "type": "string" },
+          "inStock": { "type": "boolean" },
+          "imageUrl": { "type": "string" }
+        }
+      },
+      "Wishlist": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": { "type": "string" },
+                "storeId": { "type": "string" },
+                "priority": { "type": "integer" },
+                "notes": { "type": "string" }
+              }
+            }
+          },
+          "viewers": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "GiftIdea": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "imageUrl": { "type": "string" },
+          "categories": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "targetAudience": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "occasions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string" },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/stores": {
+      "get": {
+        "summary": "List all stores",
+        "operationId": "getStores",
+        "responses": {
+          "200": {
+            "description": "List of stores"
+          }
+        }
+      }
+    },
+    "/stores/search": {
+      "get": {
+        "summary": "Search stores",
+        "operationId": "searchStores",
+        "responses": {
+          "200": {
+            "description": "Search results"
+          }
+        }
+      }
+    },
+    "/stores/stats": {
+      "get": {
+        "summary": "Get store statistics",
+        "operationId": "getStoreStats",
+        "responses": {
+          "200": {
+            "description": "Store statistics"
+          }
+        }
+      }
+    },
+    "/stores/{id}": {
+      "get": {
+        "summary": "Get store by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Store details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Store" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "List products",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Product" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wishlists": {
+      "get": {
+        "summary": "List user's wishlists",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of wishlists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Wishlist" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create wishlist",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": { "type": "string" },
+                        "storeId": { "type": "string" },
+                        "priority": { "type": "integer" },
+                        "notes": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wishlist created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Wishlist" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/giftideas": {
+      "get": {
+        "summary": "List gift ideas",
+        "parameters": [
+          {
+            "name": "occasion",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "targetAudience",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of gift ideas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/GiftIdea" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+} 

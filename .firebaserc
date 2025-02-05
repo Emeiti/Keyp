@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "keyp-51c12"
-  }
+  },
+  "targets": {
+    "keyp-51c12": {
+      "hosting": {
+        "api-keyp-fo": ["api-keyp-fo"]
+      }
+    }
+  },
+  "etags": {}
 }

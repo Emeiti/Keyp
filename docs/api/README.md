@@ -10,138 +10,100 @@ https://api.keyp.fo/v1
 All requests must include a Firebase JWT token in the Authorization header:
 `Authorization: Bearer <token>`
 
-## Endpoints & Response Types
+## Endpoints
 
 ### Stores
 
-```typescript
-// List stores
+```http
+List stores
 GET /stores
-Response:
-{
-stores: {
-id: string
-name: string
-url: string
-active: boolean
-metadata: {
-logo: string
-hasWebshop: boolean
-hasPhysicalShop: boolean
-categories: string[]
-brands: string[]
-}
-// ... other store fields as defined in Database Structure
-}[]
-}
-// Get single store
+
+Query Parameters
+- active: boolean
+- hasWebshop: boolean
+- hasPhysicalShop: boolean
+- category: string
+
+Get single store
 GET /stores/{id}
-Response matches store structure from Database Structure Documentation
 ```
 
 ### Products
 
-```typescript
-// List products
+```http
+List products
 GET /products
 
-Query params:
+Query Parameters
+- storeId: string
+- category: string
+- minPrice: number
+- maxPrice: number
+- inStock: boolean
 
-storeId: string
-category: string
-minPrice: number
-maxPrice: number
-inStock: boolean
-// Get product details
+Get product details
 GET /products/{id}
-// Manage products (store_owner, admin)
+
+Create product (requires store_owner or admin role)
 POST /products
+Content-Type: application/json
+
+Update product (requires store_owner or admin role)
 PUT /products/{id}
-``` 
+Content-Type: application/json
+```
 
 ### Wishlists
 
-```typescript
-// Get wishlist
+```http
+List wishlists
+GET /wishlists
+
+Create wishlist
+POST /wishlists
+Content-Type: application/json
+
+Get wishlist
 GET /wishlists/{id}
 
-Response:
-{
-userId: string | null
-name: string
-shareableUrl: string
-createdAt: string
-lastUpdated: string
-items: {
-productId: string
-storeId: string
-addedAt: string
-priority: number
-notes?: string
-productDetails: {
-name: string
-description: string
-price: number
-imageUrl: string
-category: string
-}
-purchase?: { // Only visible to viewers
-purchasedBy: string
-purchasedAt: string
-hidden: boolean
-}
-}[]
-}
+Update wishlist
+PUT /wishlists/{id}
+Content-Type: application/json
+
+Manage viewers
+POST /wishlists/{id}/viewers
+DELETE /wishlists/{id}/viewers/{userId}
 ```
+
 
 ### Gift Ideas
 
-```typescript
-// List gift ideas
+```http
+List gift ideas
 GET /giftideas
-Query params:
-occasion: string
-targetAudience: string[]
-maxPrice: number
-storeId: string
-Response:
-{
-giftIdeas: {
-id: string
-storeId: string
-title: string
-description: string
-price: number
-imageUrl: string
-categories: string[]
-targetAudience: string[]
-occasions: string[]
-createdAt: string
-products: {
-productId: string
-storeId: string
-required: boolean
-}[]
-}[]
-}
-```
 
-// Create gift idea (store_owner)
+Query Parameters
+- occasion: string
+- targetAudience: string[]
+- maxPrice: number
+- storeId: string
+
+Create gift idea (store_owner)
 POST /giftideas
-Request body matches Database Structure Documentation
-
+Content-Type: application/json
+```
 
 ## Error Handling
 All API errors follow this format:
 
-```typescript
+```json
 {
-  error: {
-    code: string     // e.g., "PERMISSION_DENIED"
-    message: string  // Human readable message
-    details?: {
-      field?: string
-      reason?: string
+  "error": {
+    "code": "string",     // e.g., "PERMISSION_DENIED"
+    "message": "string",  // Human readable message
+    "details": {
+      "field": "string",
+      "reason": "string"
     }
   }
 }
@@ -160,8 +122,7 @@ Common error codes:
 - Store Owners: 5000 requests/hour
 - Admin: Unlimited
 
-
 ## Need Help?
-- Full API Documentation: https://api.keyp.fo/docs
+- Full Documentation: https://api.keyp.fo/docs
 - Support: support@keyp.fo
 - GitHub Issues: github.com/keypfo/api/issues

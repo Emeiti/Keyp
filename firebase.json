@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "api-keyp-fo",
     "public": "public",
     "ignore": [
       "firebase.json",
@@ -8,25 +9,26 @@
     ],
     "rewrites": [
       {
-        "source": "/getStores",
+        "source": "/docs",
+        "destination": "/docs/index.html"
+      },
+      {
+        "source": "/v1/stores",
         "function": "getStores"
       },
       {
-        "source": "/getStoreStats",
-        "function": "getStoreStats"
-      },
-      {
-        "source": "/searchStores",
+        "source": "/v1/stores/search",
         "function": "searchStores"
       },
       {
-        "source": "/advancedSearch",
-        "function": "advancedSearch"
+        "source": "/v1/stores/stats",
+        "function": "getStoreStats"
       }
     ]
   },
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "runtime": "nodejs18"
   },
   "firestore": {
     "rules": "firestore.rules",
