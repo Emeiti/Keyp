@@ -365,7 +365,7 @@ router.get('/recommendations', auth, async (req, res) => {
           gender: gender as string
         })
       }))
-      .filter(gift => !excludeIds.includes(gift.id))
+      .filter(gift => !Array.isArray(excludeIds) ? true : !excludeIds.includes(gift.id))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
 

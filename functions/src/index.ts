@@ -7,11 +7,11 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
 import { Request, Response } from 'express';
+import { onRequest } from 'firebase-functions/v2/https';
 
 // Extend Request type to include user
 interface AuthRequest extends Request {
@@ -28,11 +28,19 @@ app.use(cors({ origin: true }));
 const auth = async (req: AuthRequest, res: Response, next: any) => {
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
-    if (!token) throw new Error('No token provided');
+    if (!token) {
+      res.status(401).json({ 
+        error: { 
+          code: 'UNAUTHORIZED',
+          message: 'No token provided'
+        }
+      });
+      return;
+    }
     
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = decodedToken;
-    next();
+    return next();
   } catch (error) {
     res.status(401).json({ 
       error: { 
@@ -40,6 +48,7 @@ const auth = async (req: AuthRequest, res: Response, next: any) => {
         message: 'Invalid or missing authentication token'
       }
     });
+    return;
   }
 };
 
@@ -94,8 +103,112 @@ interface Store {
   subscription: StoreSubscription;
 }
 
-// Test data setup endpoint
-app.post('/setupTestData', async (req: Request, res: Response) => {
+// Create separate Express apps for each endpoint
+const productsApp = express();
+productsApp.use(cors({ origin: true }));
+
+const storesApp = express();
+storesApp.use(cors({ origin: true }));
+
+const setupApp = express();
+setupApp.use(cors({ origin: true }));
+
+const searchApp = express();
+searchApp.use(cors({ origin: true }));
+
+const statsApp = express();
+statsApp.use(cors({ origin: true }));
+
+const detailedStatsApp = express();
+detailedStatsApp.use(cors({ origin: true }));
+
+const listFunctionsApp = express();
+listFunctionsApp.use(cors({ origin: true }));
+
+const wishlistsApp = express();
+wishlistsApp.use(cors({ origin: true }));
+
+const giftIdeasApp = express();
+giftIdeasApp.use(cors({ origin: true }));
+
+// Products endpoint
+productsApp.get('*', async (req: Request, res: Response) => {
+  try {
+    const { category, maxPrice, storeId } = req.query;
+    const products: any[] = [];
+
+    // Get all stores if no specific store is requested
+    const storesRef = admin.firestore().collection('stores');
+    
+    if (storeId) {
+      // Single store case
+      const storeDoc = await storesRef.doc(storeId as string).get();
+      if (!storeDoc.exists) {
+        return res.status(404).json({
+          error: {
+            code: 'STORE_NOT_FOUND',
+            message: 'Store not found'
+          }
+        });
+      }
+      const productsSnapshot = await storeDoc.ref.collection('products').get();
+      productsSnapshot.docs.forEach(doc => {
+        products.push({
+          id: doc.id,
+          storeId: storeId,
+          ...doc.data()
+        });
+      });
+    } else {
+      // All stores case
+      const storesSnapshot = await storesRef.get();
+      for (const storeDoc of storesSnapshot.docs) {
+        const productsSnapshot = await storeDoc.ref.collection('products').get();
+        productsSnapshot.docs.forEach(doc => {
+          products.push({
+            id: doc.id,
+            storeId: storeDoc.id,
+            ...doc.data()
+          });
+        });
+      }
+    }
+
+    // Apply filters
+    let filteredProducts = products;
+    
+    if (category) {
+      filteredProducts = filteredProducts.filter(product => 
+        product.category?.toLowerCase() === (category as string).toLowerCase()
+      );
+    }
+
+    if (maxPrice) {
+      const price = parseFloat(maxPrice as string);
+      if (!isNaN(price)) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.price <= price
+        );
+      }
+    }
+
+    return res.json({
+      count: filteredProducts.length,
+      products: filteredProducts
+    });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return res.status(500).json({ 
+      error: { 
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch products'
+      }
+    });
+  }
+});
+
+// Setup test data endpoint
+setupApp.post('/', async (req: Request, res: Response) => {
   try {
     // Add stores
     const stores = [
@@ -172,15 +285,15 @@ app.post('/setupTestData', async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ message: 'Test data created successfully' });
+    return res.json({ message: 'Test data created successfully' });
   } catch (error) {
     console.error('Error creating test data:', error);
-    res.status(500).json({ error: 'Failed to create test data' });
+    return res.status(500).json({ error: 'Failed to create test data' });
   }
 });
 
 // Store endpoints
-app.get('/', async (req: Request, res: Response) => {
+storesApp.get('/', async (req: Request, res: Response) => {
   try {
     const storesRef = admin.firestore().collection('stores');
     const snapshot = await storesRef.get();
@@ -584,13 +697,12 @@ app.get('/getDetailedStats', async (req, res) => {
   }
 });
 
-// List all available functions
-app.get('/listFunctions', async (req, res) => {
+// List functions endpoint
+listFunctionsApp.get('/', async (req, res) => {
   try {
-    // Get the project ID from the environment
     const projectId = process.env.GCLOUD_PROJECT;
     
-    res.json({
+    return res.json({
       projectId,
       region: 'europe-west1',
       availableFunctions: [
@@ -598,21 +710,26 @@ app.get('/listFunctions', async (req, res) => {
         'getStoreStats',
         'searchStores',
         'advancedSearch',
-        'getDetailedStats'
+        'getDetailedStats',
+        'getProducts',
+        'setupTestData'
       ],
       baseUrl: `https://europe-west1-${projectId}.cloudfunctions.net/`
     });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// Export the Express app as Firebase Functions
-export const getStores = functions.https.onRequest(app);
-export const searchStores = functions.https.onRequest(app);
-export const getStoreStats = functions.https.onRequest(app);
-export const advancedSearch = functions.https.onRequest(app);
-export const getDetailedStats = functions.https.onRequest(app);
-export const listFunctions = functions.https.onRequest(app);
-export const setupTestData = functions.https.onRequest(app);
+// Export the Express apps as Firebase Functions
+export const getProducts = onRequest({ region: 'europe-west1' }, productsApp);
+export const getStores = onRequest({ region: 'europe-west1' }, storesApp);
+export const searchStores = onRequest({ region: 'europe-west1' }, searchApp);
+export const getStoreStats = onRequest({ region: 'europe-west1' }, statsApp);
+export const advancedSearch = onRequest({ region: 'europe-west1' }, searchApp);
+export const getDetailedStats = onRequest({ region: 'europe-west1' }, detailedStatsApp);
+export const listFunctions = onRequest({ region: 'europe-west1' }, listFunctionsApp);
+export const setupTestData = onRequest({ region: 'europe-west1' }, setupApp);
+export const wishlists = onRequest({ region: 'europe-west1' }, wishlistsApp);
+export const giftIdeas = onRequest({ region: 'europe-west1' }, giftIdeasApp);

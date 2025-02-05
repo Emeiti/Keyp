@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://api-keyp-fo.web.app/v1",
+      "url": "https://api.keyp.fo/v1",
       "description": "Production API"
     }
   ],
@@ -17,7 +17,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "Firebase JWT token"
+        "description": "Firebase JWT token obtained from Firebase Authentication"
       }
     },
     "schemas": {
@@ -27,11 +27,36 @@
           "id": { "type": "string" },
           "name": { "type": "string" },
           "active": { "type": "boolean" },
-          "hasWebshop": { "type": "boolean" },
-          "hasPhysicalShop": { "type": "boolean" },
-          "category": { "type": "string" },
-          "location": { "type": "string" },
-          "website": { "type": "string" }
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "hasWebshop": { "type": "boolean" },
+              "hasPhysicalShop": { "type": "boolean" },
+              "categories": { 
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "brands": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "email": { "type": "string" },
+              "phone": { "type": "string" },
+              "address": {
+                "type": "object",
+                "properties": {
+                  "street": { "type": "string" },
+                  "city": { "type": "string" },
+                  "postalCode": { "type": "string" }
+                }
+              }
+            }
+          }
         }
       },
       "Product": {
@@ -53,6 +78,8 @@
           "id": { "type": "string" },
           "userId": { "type": "string" },
           "name": { "type": "string" },
+          "description": { "type": "string" },
+          "isPublic": { "type": "boolean" },
           "items": {
             "type": "array",
             "items": {
@@ -60,15 +87,19 @@
               "properties": {
                 "productId": { "type": "string" },
                 "storeId": { "type": "string" },
-                "priority": { "type": "integer" },
-                "notes": { "type": "string" }
+                "priority": { "type": "integer", "enum": [1, 2, 3] },
+                "notes": { "type": "string" },
+                "addedAt": { "type": "string", "format": "date-time" },
+                "quantity": { "type": "integer", "minimum": 1 }
               }
             }
           },
           "viewers": {
             "type": "array",
             "items": { "type": "string" }
-          }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
       "GiftIdea": {
@@ -228,14 +259,41 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Wishlist" }
+                },
+                "example": {
+                  "wishlists": [
+                    {
+                      "id": "abc123",
+                      "name": "Birthday Wishlist",
+                      "description": "My birthday wishes for 2024",
+                      "isPublic": true,
+                      "items": [
+                        {
+                          "productId": "prod123",
+                          "storeId": "store456",
+                          "priority": 1,
+                          "notes": "Blue color preferred",
+                          "quantity": 1
+                        }
+                      ]
+                    }
+                  ]
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
         }
       },
       "post": {
-        "summary": "Create wishlist",
+        "summary": "Create a new wishlist",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -246,6 +304,116 @@
                 "required": ["name"],
                 "properties": {
                   "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "isPublic": { "type": "boolean", "default": false },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["productId", "storeId"],
+                      "properties": {
+                        "productId": { "type": "string" },
+                        "storeId": { "type": "string" },
+                        "priority": { "type": "integer", "enum": [1, 2, 3] },
+                        "notes": { "type": "string" },
+                        "quantity": { "type": "integer", "minimum": 1 }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "name": "Birthday Wishlist",
+                "description": "My birthday wishes for 2024",
+                "isPublic": true,
+                "items": [
+                  {
+                    "productId": "prod123",
+                    "storeId": "store456",
+                    "priority": 1,
+                    "notes": "Blue color preferred",
+                    "quantity": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wishlist created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Wishlist" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wishlists/{id}": {
+      "get": {
+        "summary": "Get a specific wishlist",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Wishlist details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Wishlist" }
+              }
+            }
+          },
+          "404": {
+            "description": "Wishlist not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a wishlist",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "isPublic": { "type": "boolean" },
                   "items": {
                     "type": "array",
                     "items": {
@@ -253,8 +421,9 @@
                       "properties": {
                         "productId": { "type": "string" },
                         "storeId": { "type": "string" },
-                        "priority": { "type": "integer" },
-                        "notes": { "type": "string" }
+                        "priority": { "type": "integer", "enum": [1, 2, 3] },
+                        "notes": { "type": "string" },
+                        "quantity": { "type": "integer", "minimum": 1 }
                       }
                     }
                   }
@@ -264,13 +433,31 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "Wishlist created",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Wishlist" }
-              }
-            }
+          "200": {
+            "description": "Wishlist updated successfully"
+          },
+          "404": {
+            "description": "Wishlist not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a wishlist",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": {
+            "description": "Wishlist deleted successfully"
+          },
+          "404": {
+            "description": "Wishlist not found"
           }
         }
       }

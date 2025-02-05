@@ -23,12 +23,29 @@
       {
         "source": "/v1/stores/stats",
         "function": "getStoreStats"
+      },
+      {
+        "source": "/v1/products",
+        "function": "getProducts"
+      },
+      {
+        "source": "/v1/functions",
+        "function": "listFunctions"
+      },
+      {
+        "source": "/v1/wishlists/**",
+        "function": "wishlists"
+      },
+      {
+        "source": "/v1/giftideas/**",
+        "function": "giftIdeas"
       }
     ]
   },
   "functions": {
     "source": "functions",
-    "runtime": "nodejs18"
+    "runtime": "nodejs18",
+    "region": "europe-west1"
   },
   "firestore": {
     "rules": "firestore.rules",
