@@ -5,7 +5,9 @@
   "targets": {
     "keyp-51c12": {
       "hosting": {
-        "api-keyp-fo": ["api-keyp-fo"]
+        "api-keyp-fo": [
+          "api-keyp-fo"
+        ]
       }
     }
   },

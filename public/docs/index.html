@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css">
     <link rel="icon" type="image/png" href="https://api.keyp.fo/favicon.ico" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -17,15 +18,114 @@
         .swagger-ui .info .title {
             color: #1a365d;
         }
+        .auth-wrapper {
+            margin: 1em;
+            padding: 1em;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .auth-wrapper h3 {
+            margin-top: 0;
+        }
+        pre {
+            background-color: #f1f1f1;
+            padding: 1em;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .implementation-guide {
+            margin: 2em;
+            padding: 1em;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .implementation-guide h1 {
+            color: #1a365d;
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
-    <div id="swagger-ui"></div>
-    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <div class="auth-check">
+        <h3>Please sign in to view the complete API documentation</h3>
+        <button id="signInButton" onclick="signIn()">Sign in with Firebase</button>
+    </div>
+    <div class="implementation-guide" id="implementation-guide" style="display: none;"></div>
+    <div class="auth-wrapper" style="display: none;">
+        <h3>Authentication Guide</h3>
+        <p>This API uses Firebase Authentication. To access protected endpoints:</p>
+        <ol>
+            <li>Initialize Firebase in your application</li>
+            <li>Sign in using Firebase Authentication</li>
+            <li>Get the ID token from the current user</li>
+            <li>Include the token in your API requests</li>
+        </ol>
+        <p><strong>Example:</strong></p>
+        <pre>
+// Get Firebase token
+const user = firebase.auth().currentUser;
+const token = await user.getIdToken();
+
+// Use in API requests
+fetch('https://api.keyp.fo/v1/wishlists', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});</pre>
+    </div>
+    <div id="swagger-ui" style="display: none;"></div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
     <script>
+        // Initialize Firebase (use your config)
+        const firebaseConfig = {
+            // Your firebase config
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // Check authentication state
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                // User is signed in
+                document.querySelector('.auth-check').style.display = 'none';
+                document.querySelector('.implementation-guide').style.display = 'block';
+                document.querySelector('.auth-wrapper').style.display = 'block';
+                document.querySelector('#swagger-ui').style.display = 'block';
+                
+                // Get the user's token and fetch the protected docs
+                user.getIdToken().then(token => {
+                    fetch('/api/docs/implementation-guide', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(text => {
+                        const converter = new showdown.Converter();
+                        document.getElementById('implementation-guide').innerHTML = 
+                            converter.makeHtml(text);
+                    });
+                });
+            } else {
+                // User is signed out
+                document.querySelector('.auth-check').style.display = 'block';
+                document.querySelector('.implementation-guide').style.display = 'none';
+                document.querySelector('.auth-wrapper').style.display = 'none';
+                document.querySelector('#swagger-ui').style.display = 'none';
+            }
+        });
+
+        function signIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider);
+        }
+
+        // Initialize Swagger UI
         window.onload = function() {
             const ui = SwaggerUIBundle({
-                url: "/docs/openapi.json",
+                url: window.location.origin + "/docs/openapi.json",
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -35,7 +135,13 @@
                 plugins: [
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
-                layout: "BaseLayout"
+                layout: "BaseLayout",
+                defaultModelsExpandDepth: 3,
+                defaultModelExpandDepth: 3,
+                displayRequestDuration: true,
+                docExpansion: "list",
+                filter: true,
+                tryItOutEnabled: true
             });
             window.ui = ui;
         };

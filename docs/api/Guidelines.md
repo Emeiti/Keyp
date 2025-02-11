@@ -39,16 +39,42 @@ The Keyp.fo API provides centralized access to store data, products, wishlists, 
 
 #### Wishlists
 - `/wishlists` → Wishlist management
-  - GET: Get user wishlists
-  - POST: Create wishlist
-  - PUT: Update wishlist
-- `/wishlists/{id}` → Single wishlist operations
-  - GET: Get wishlist details
+  - GET: Get user wishlists (supports filtering and pagination)
+  - POST: Create new wishlist
   - PUT: Update wishlist
   - DELETE: Delete wishlist
-- `/wishlists/{id}/viewers` → Wishlist sharing
-  - POST: Add viewer
-  - DELETE: Remove viewer
+
+- `/wishlists/{id}` → Single wishlist operations
+  - GET: Get specific wishlist (public or own)
+  - PUT: Update wishlist (owner only)
+  - DELETE: Delete wishlist (owner only)
+
+- `/wishlists/{id}/items` → Wishlist items
+  - POST: Add item to wishlist (owner only)
+  - PUT: Update item (owner only)
+  - DELETE: Remove item (owner only)
+
+- `/wishlists/{id}/share` → Sharing
+  - POST: Toggle wishlist public/private (owner only)
+  Example:
+  ```json
+  {
+    "isPublic": true
+  }
+  ```
+
+- `/wishlists/{id}/bought` → Purchase tracking
+  - POST: Mark/unmark item as bought (any authenticated user except owner)
+  Example:
+  ```json
+  {
+    "itemId": "123",
+    "bought": true
+  }
+  ```
+  - GET: View bought items (any authenticated user except owner)
+
+Note: Purchase status is always hidden from the wishlist owner to keep gifts a surprise!
 
 #### Gift Ideas
 - `/giftideas` → Gift ideas management
@@ -135,3 +161,50 @@ All API errors follow this format:
 - Documentation: https://api.keyp.fo/docs
 - Support: support@keyp.fo
 - Issues: github.com/keypfo/api/issues
+
+#### Wishlists API Limits & Validation
+
+1. **Rate Limits**
+   - Maximum 10 wishlists created per user per 24 hours
+   - Maximum 20 items marked as bought per user per hour
+
+2. **Wishlist Constraints**
+   - Name: 1-100 characters (required)
+   - Description: maximum 500 characters (optional)
+   - Maximum 100 items per wishlist
+
+3. **Item Constraints**
+   - Name: 1-200 characters (required)
+   - Notes: maximum 1000 characters (optional)
+   - Priority: 1-5 (required)
+
+4. **Error Responses**
+   ```json
+   // Rate limit exceeded
+   {
+     "error": "Too many wishlists created. Please try again tomorrow."
+   }
+
+   // Invalid data
+   {
+     "error": "Wishlist name must be between 1 and 100 characters"
+   }
+
+   // Item limit exceeded
+   {
+     "error": "Wishlist cannot exceed 100 items"
+   }
+   ```
+
+5. **Purchase Tracking**
+   - Only non-owners can mark items as bought
+   - Purchase status is always hidden from wishlist owner
+   - Items can be unmarked as bought by the same user who marked them
+
+### Wishlist Endpoints
+- `/wishlistItems` → Wishlist item management
+  - GET: List items in wishlist (with wishlistId param)
+  - GET: Get single item (with wishlistId and itemId params)
+  - POST: Add item to wishlist (with wishlistId param)
+  - PUT: Update item (with wishlistId and itemId params)
+  - DELETE: Delete item (with wishlistId and itemId params)

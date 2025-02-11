@@ -1,13 +1,14 @@
-import { Router } from 'express';
-import { auth } from '../middleware/auth';
+import { Router, Request, Response, NextFunction } from 'express';
+import { authMiddleware } from '../middleware/auth';
 import { db } from '../config/firebase';
 import { Query, DocumentData, CollectionReference } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 // Get user's wishlists with filtering
-router.get('/', auth, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const {
       q, // search query
@@ -70,7 +71,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Search within a specific wishlist's items
-router.get('/:id/items/search', auth, async (req, res) => {
+router.get('/:id/items/search', authMiddleware, async (req, res) => {
   try {
     const wishlistId = req.params.id;
     const {
@@ -164,37 +165,173 @@ router.get('/:id/items/search', auth, async (req, res) => {
 });
 
 // User wishlist operations
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   // Get specific wishlist
 });
 
-router.post('/', auth, async (req, res) => {
-  // Create new wishlist
+// Add validation middleware
+const validateWishlist = (req: Request, res: Response, next: NextFunction): void | Response => {
+  const { name, description } = req.body;
+  
+  if (!name || name.length < 1 || name.length > 100) {
+    return res.status(400).json({ 
+      error: 'Wishlist name must be between 1 and 100 characters' 
+    });
+  }
+
+  if (description && description.length > 500) {
+    return res.status(400).json({ 
+      error: 'Description cannot exceed 500 characters' 
+    });
+  }
+
+  next();
+};
+
+const validateWishlistItem = (req: Request, res: Response, next: NextFunction): void | Response => {
+  const { name, notes, priority } = req.body;
+  
+  if (!name || name.length < 1 || name.length > 200) {
+    return res.status(400).json({ 
+      error: 'Item name must be between 1 and 200 characters' 
+    });
+  }
+
+  if (notes && notes.length > 1000) {
+    return res.status(400).json({ 
+      error: 'Notes cannot exceed 1000 characters' 
+    });
+  }
+
+  if (!priority || priority < 1 || priority > 5) {
+    return res.status(400).json({ 
+      error: 'Priority must be between 1 and 5' 
+    });
+  }
+
+  next();
+};
+
+// Rate limiting middleware
+const wishlistRateLimit = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 10, // 10 wishlists per day
+  message: { error: 'Too many wishlists created. Please try again tomorrow.' }
 });
 
-router.put('/:id', auth, async (req, res) => {
+const boughtRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // 20 items marked as bought per hour
+  message: { error: 'Rate limit exceeded for marking items as bought. Please try again later.' }
+});
+
+// Apply validation and rate limiting to routes
+router.post('/', authMiddleware, wishlistRateLimit, validateWishlist, async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const wishlistData = {
+      ...req.body,
+      userId: req.user?.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const docRef = await db.collection('wishlists').add(wishlistData);
+    
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: docRef.id,
+        ...wishlistData
+      }
+    });
+  } catch (error) {
+    console.error('Create wishlist error:', error);
+    return res.status(500).json({ error: 'Failed to create wishlist' });
+  }
+});
+
+router.post('/:id/items', authMiddleware, validateWishlistItem, async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const wishlistRef = db.collection('wishlists').doc(req.params.id);
+    const wishlist = await wishlistRef.get();
+
+    // Check ownership
+    if (!wishlist.exists || wishlist.data()?.userId !== req.user?.uid) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Check item limit
+    const itemsCount = await wishlistRef.collection('items').count().get();
+    if (itemsCount.data()?.count >= 100) {
+      return res.status(400).json({ error: 'Wishlist cannot exceed 100 items' });
+    }
+
+    const itemData = {
+      ...req.body,
+      addedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const itemRef = await wishlistRef.collection('items').add(itemData);
+    
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: itemRef.id,
+        ...itemData
+      }
+    });
+  } catch (error) {
+    console.error('Add item error:', error);
+    return res.status(500).json({ error: 'Failed to add item to wishlist' });
+  }
+});
+
+router.post('/:id/bought', authMiddleware, boughtRateLimit, async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const { itemId } = req.body;
+    const wishlistRef = db.collection('wishlists').doc(req.params.id);
+    const wishlist = await wishlistRef.get();
+
+    // Ensure user is not the owner
+    if (wishlist.data()?.userId === req.user?.uid) {
+      return res.status(403).json({ error: 'Wishlist owner cannot mark items as bought' });
+    }
+
+    await wishlistRef.collection('bought').doc(itemId).set({
+      boughtBy: req.user?.uid,
+      boughtAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Mark as bought error:', error);
+    return res.status(500).json({ error: 'Failed to mark item as bought' });
+  }
+});
+
+router.put('/:id', authMiddleware, async (req, res) => {
   // Update wishlist
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   // Delete wishlist
 });
 
 // Wishlist items
-router.post('/:id/items', auth, async (req, res) => {
+router.post('/:id/items', authMiddleware, async (req, res) => {
   // Add item to wishlist
 });
 
-router.delete('/:id/items/:itemId', auth, async (req, res) => {
+router.delete('/:id/items/:itemId', authMiddleware, async (req, res) => {
   // Remove item from wishlist
 });
 
-router.put('/:id/items/:itemId', auth, async (req, res) => {
+router.put('/:id/items/:itemId', authMiddleware, async (req, res) => {
   // Update item in wishlist
 });
 
 // Update the count endpoint to ensure it always returns a value
-router.get('/:id/count', auth, async (req, res) => {
+router.get('/:id/count', authMiddleware, async (req, res) => {
   try {
     const wishlistId = req.params.id;
     const snapshot = await db.collection('wishlists')
@@ -210,7 +347,7 @@ router.get('/:id/count', auth, async (req, res) => {
 });
 
 // Share wishlist
-router.post('/:id/share', auth, async (req, res) => {
+router.post('/:id/share', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { visibility, sharedWith = [] } = req.body;
@@ -243,7 +380,7 @@ router.post('/:id/share', auth, async (req, res) => {
 });
 
 // Update gift purchase status
-router.patch('/:wishlistId/items/:itemId/status', auth, async (req, res) => {
+router.patch('/:wishlistId/items/:itemId/status', authMiddleware, async (req, res) => {
   try {
     const { wishlistId, itemId } = req.params;
     const { status } = req.body; // 'available' or 'purchased'

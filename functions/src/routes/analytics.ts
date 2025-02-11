@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { auth } from '../middleware/auth';
+import { authMiddleware as auth } from '../middleware/auth';
 import { db } from '../config/firebase';
 import { Query, DocumentData, CollectionReference } from 'firebase-admin/firestore';
 

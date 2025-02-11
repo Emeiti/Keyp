@@ -20,7 +20,12 @@
   - `/stores/{id}` → Retrieve a specific store.
   - `/products` → Retrieve products across stores.
   - `/products/{id}` → Retrieve product details.
-  - `/wishlist` → User wishlists (for `ynskilisti.keyp.fo`).
+  - `/wishlistItems` → Wishlist item management
+    - GET `/wishlistItems?wishlistId={id}` → List items in wishlist
+    - GET `/wishlistItems?wishlistId={id}&itemId={id}` → Get specific item
+    - POST `/wishlistItems?wishlistId={id}` → Add item to wishlist
+    - PUT `/wishlistItems?wishlistId={id}&itemId={id}` → Update item
+    - DELETE `/wishlistItems?wishlistId={id}&itemId={id}` → Delete item
   - `/giftideas` → Store-provided gift ideas.
   - `/sales` → Retrieve current store sales (`tilbod.keyp.fo`).
   - `/auth/register` → User registration.

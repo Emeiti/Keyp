@@ -13,6 +13,10 @@
         "destination": "/docs/index.html"
       },
       {
+        "source": "/docs/**",
+        "destination": "/docs/**"
+      },
+      {
         "source": "/v1/stores",
         "function": "getStores"
       },
@@ -33,12 +37,38 @@
         "function": "listFunctions"
       },
       {
+        "source": "/v1/wishlistItems",
+        "function": "wishlistItems"
+      },
+      {
+        "source": "/v1/wishlistItems/**",
+        "function": "wishlistItems"
+      },
+      {
+        "source": "/v1/wishlists",
+        "function": "wishlists"
+      },
+      {
         "source": "/v1/wishlists/**",
         "function": "wishlists"
       },
       {
         "source": "/v1/giftideas/**",
         "function": "giftIdeas"
+      },
+      {
+        "source": "/v1/stores/**",
+        "run": {
+          "serviceId": "getstores",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/v1/auth/**",
+        "run": {
+          "serviceId": "auth",
+          "region": "europe-west1"
+        }
       }
     ]
   },

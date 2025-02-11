@@ -16,6 +16,11 @@ service cloud.firestore {
         request.auth.token.storeId == storeId;
     }
 
+    function isWishlistOwner(wishlistId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/wishlists/$(wishlistId)).data.userId == request.auth.uid;
+    }
+
     // Store rules
     match /stores/{storeId} {
       allow read: if true;  // Public can read store info
@@ -32,19 +37,38 @@ service cloud.firestore {
 
     // Wishlist rules
     match /wishlists/{wishlistId} {
-      allow read: if 
-        resource.data.userId == null || // Public wishlist
-        resource.data.userId == request.auth.uid || // Owner
-        exists(/databases/$(database)/documents/wishlists/$(wishlistId)/viewers/$(request.auth.uid)); // Shared viewer
+      // Allow reading if wishlist is public or user is owner
+      allow read: if resource.data.isPublic == true || 
+                 (isAuthenticated() && resource.data.userId == request.auth.uid);
       
-      allow create: if true; // Anyone can create a wishlist
-      allow update: if resource.data.userId == request.auth.uid;
-      allow delete: if resource.data.userId == request.auth.uid;
+      // Allow creation if user is authenticated
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+      
+      // Allow updates if user is the owner
+      allow update: if isAuthenticated() && 
+                   resource.data.userId == request.auth.uid;
+      
+      // Allow deletion if user is the owner
+      allow delete: if isAuthenticated() && 
+                   resource.data.userId == request.auth.uid;
 
-      // Viewers subcollection
-      match /viewers/{userId} {
-        allow read: if request.auth.uid == userId;
-        allow write: if resource.data.userId == request.auth.uid;
+      // Bought items subcollection
+      match /bought/{itemId} {
+        // Anyone except owner can read/write bought status
+        allow read, write: if isAuthenticated() && 
+                          get(/databases/$(database)/documents/wishlists/$(wishlistId)).data.userId != request.auth.uid;
+      }
+
+      // Items subcollection
+      match /items/{itemId} {
+        // Public can read if wishlist is public
+        allow read: if get(/databases/$(database)/documents/wishlists/$(wishlistId)).data.isPublic == true ||
+                   (isAuthenticated() && get(/databases/$(database)/documents/wishlists/$(wishlistId)).data.userId == request.auth.uid);
+        
+        // Only owner can modify items
+        allow write: if isAuthenticated() && 
+                    get(/databases/$(database)/documents/wishlists/$(wishlistId)).data.userId == request.auth.uid;
       }
     }
 

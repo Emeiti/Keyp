@@ -3,7 +3,8 @@
   "info": {
     "title": "Keyp.fo API",
     "version": "1.0.0",
-    "description": "API for Keyp.fo services including stores, products, wishlists, and gift ideas"
+    "description": "API for Keyp.fo services including stores, products, wishlists, and gift ideas. For detailed implementation instructions, see the guide above.",
+    "x-implementation-guide": "/docs/implementation-guide.md"
   },
   "servers": [
     {

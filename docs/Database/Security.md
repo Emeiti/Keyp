@@ -12,10 +12,11 @@ Our Firestore security rules (defined in `firestore.rules`) implement the follow
 - Rate limiting applied to prevent abuse
 
 ### Wishlist Access Patterns
-- Anonymous users can create and manage wishlists
+- Users can create and manage wishlists
+- Users can only access their own wishlists unless shared
 - Purchase information is hidden from wishlist owners
-- Shared viewers can see purchase status
-- Rate limiting: 10 wishlists per hour per user
+- Rate limiting: 10 wishlists per 24 hours per user
+- Maximum 100 items per wishlist
 
 ### Gift Ideas Access Patterns
 - Public read access for all gift ideas

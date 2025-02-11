@@ -1,0 +1,152 @@
+### Test 1: Create a wishlist
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "My Test Wishlist",
+    "description": "Testing wishlist creation"
+}
+
+### Test 2: Get all wishlists
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+Authorization: Bearer test-token
+
+### Test 3: Get specific wishlist
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}
+Authorization: Bearer test-token
+
+### Test 4: Update wishlist
+PUT http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Updated Wishlist Name",
+    "description": "Updated description"
+}
+
+### Test 5: Add item to wishlist
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/items
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Test Item",
+    "priority": 1,
+    "notes": "Testing item creation",
+    "url": "https://example.com/item",
+    "price": 199.99
+}
+
+### Test 6: Update item in wishlist
+PUT http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/items/{itemId}
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Updated Item Name",
+    "priority": 2,
+    "notes": "Updated notes"
+}
+
+### Test 7: Mark item as bought (different user)
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/bought
+Content-Type: application/json
+Authorization: Bearer different-test-token
+
+{
+    "itemId": "{itemId}"
+}
+
+### Test 8: Try to view bought status as owner (should fail)
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/bought
+Authorization: Bearer test-token
+
+### Test 9: View bought status as different user
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/bought
+Authorization: Bearer different-test-token
+
+### Test 10: Delete item from wishlist
+DELETE http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/items/{itemId}
+Authorization: Bearer test-token
+
+### Test 11: Delete wishlist
+DELETE http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}
+Authorization: Bearer test-token
+
+### Error Tests ###
+
+### Test 12: Create wishlist without name
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "description": "Missing required name"
+}
+
+### Test 13: Create wishlist with too long name
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "This is a very long wishlist name that exceeds the 100 character limit This is a very long wishlist name that exceeds the 100 character limit",
+    "description": "Testing validation"
+}
+
+### Test 14: Add item with invalid priority
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/items
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Invalid Priority Item",
+    "priority": 10
+}
+
+### Test 15: Access without auth token
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+
+### Test 16: Try to update someone else's wishlist
+PUT http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}
+Content-Type: application/json
+Authorization: Bearer different-test-token
+
+{
+    "name": "Trying to update another's wishlist"
+}
+
+### Test 17: Rate limit test - create multiple wishlists
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Rate Limit Test {{$randomInt 1 100}}",
+    "description": "Testing rate limiting"
+}
+
+### Test 18: Try to mark own item as bought
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists/{wishlistId}/bought
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "itemId": "{itemId}"
+}
+
+### Test 19: Add item to non-existent wishlist
+POST http://localhost:5001/keyp-51c12/us-central1/api/wishlists/non-existent-id/items
+Content-Type: application/json
+Authorization: Bearer test-token
+
+{
+    "name": "Test Item",
+    "priority": 1
+}
+
+### Test 20: Test search/filter wishlists
+GET http://localhost:5001/keyp-51c12/us-central1/api/wishlists?q=test&visibility=public&sortBy=createdAt&sortOrder=desc
+Authorization: Bearer test-token

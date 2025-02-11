@@ -1,115 +1,78 @@
 # api.keyp.fo Documentation
 
 ## Overview
-The Keyp.fo API provides centralized access to store data, products, wishlists, and gift ideas across all Keyp.fo services.
+The Keyp.fo API provides centralized access to wishlists, stores, products, and gift ideas across all Keyp.fo services.
 
 ## Base URL
 https://api.keyp.fo/v1
 
 ## Authentication
 All requests must include a Firebase JWT token in the Authorization header:
-`Authorization: Bearer <token>`
+```bash
+bash
+Authorization: Bearer <token>
+```
+
 
 ## Endpoints
 
-### Stores
-
-```http
-List stores
-GET /stores
-
-Query Parameters
-- active: boolean
-- hasWebshop: boolean
-- hasPhysicalShop: boolean
-- category: string
-
-Get single store
-GET /stores/{id}
-```
-
-### Products
-
-```http
-List products
-GET /products
-
-Query Parameters
-- storeId: string
-- category: string
-- minPrice: number
-- maxPrice: number
-- inStock: boolean
-
-Get product details
-GET /products/{id}
-
-Create product (requires store_owner or admin role)
-POST /products
-Content-Type: application/json
-
-Update product (requires store_owner or admin role)
-PUT /products/{id}
-Content-Type: application/json
-```
-
 ### Wishlists
-
-```http
-List wishlists
-GET /wishlists
-
-Create wishlist
-POST /wishlists
+```bash
+List items in wishlist
+GET /wishlistItems?wishlistId={id}
+Get single item
+GET /wishlistItems?wishlistId={id}&itemId={id}
+Add item to wishlist
+POST /wishlistItems?wishlistId={id}
 Content-Type: application/json
-
-Get wishlist
-GET /wishlists/{id}
-
-Update wishlist
-PUT /wishlists/{id}
+{
+"name": "Item Name",
+"description": "Item description",
+"priority": 2,
+"price": 99.99,
+"url": "https://example.com/item",
+"note": "Color preference: blue"
+}
+Update item
+PUT /wishlistItems?wishlistId={id}&itemId={id}
 Content-Type: application/json
-
-Manage viewers
-POST /wishlists/{id}/viewers
-DELETE /wishlists/{id}/viewers/{userId}
+{
+"name": "Updated Item Name",
+"priority": 1,
+"note": "Changed color preference"
+}
+Delete item
+DELETE /wishlistItems?wishlistId={id}&itemId={id}
 ```
 
-
-### Gift Ideas
-
-```http
-List gift ideas
-GET /giftideas
-
-Query Parameters
-- occasion: string
-- targetAudience: string[]
-- maxPrice: number
-- storeId: string
-
-Create gift idea (store_owner)
-POST /giftideas
-Content-Type: application/json
-```
-
-## Error Handling
-All API errors follow this format:
-
+### Response Format
+All successful responses follow this structure:
 ```json
 {
-  "error": {
-    "code": "string",     // e.g., "PERMISSION_DENIED"
-    "message": "string",  // Human readable message
-    "details": {
-      "field": "string",
-      "reason": "string"
-    }
-  }
+"success": true,
+"data": {
+"itemId": "string",
+"name": "string",
+"description": "string",
+"price": number,
+"url": "string",
+"priority": number,
+"note": "string",
+"createdAt": "string",
+"updatedAt": "string"
+}
 }
 ```
 
-Common error codes:
+### Error Format
+``` json
+{
+"success": false,
+"error": "Error message"
+}
+```
+
+## Error Codes
 - 400: Invalid parameters or request body
 - 401: Missing or invalid authentication
 - 403: Insufficient permissions
@@ -118,11 +81,20 @@ Common error codes:
 - 500: Internal server error
 
 ## Rate Limits
-- Standard Users: 1000 requests/hour
-- Store Owners: 5000 requests/hour
-- Admin: Unlimited
+- Maximum 10 wishlists created per user per 24 hours
+- Maximum 100 items per wishlist
+- Maximum 20 items marked as bought per user per hour
+
+## Validation Rules
+### Item Properties
+- name: Required, 1-200 characters
+- description: Optional, max 500 characters
+- priority: Required, number 1-5
+- price: Optional, number
+- url: Optional, valid URL
+- note: Optional, max 1000 characters
 
 ## Need Help?
-- Full Documentation: https://api.keyp.fo/docs
+- Implementation Guide: https://api.keyp.fo/docs
 - Support: support@keyp.fo
 - GitHub Issues: github.com/keypfo/api/issues
