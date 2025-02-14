@@ -1,0 +1,4 @@
+bindings:
+- members:
+  - serviceAccount:ynskilisti-keyp-51c12-iam-gser@keyp-51c12.iam.gserviceaccount.com
+  role: roles/run.invoker 

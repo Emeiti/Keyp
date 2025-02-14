@@ -156,3 +156,36 @@ updatedAt: string;
 4. Use TypeScript types for type safety
 5. Implement proper error handling
 6. Keep wishlist items under 100 per list
+
+<!-- New Section: Image Processing & Storage Endpoint (v1.0.0) -->
+
+## API Version: 1.0.0
+
+### Image Processing & Storage Endpoint
+
+**Endpoint:** POST /upload-image
+
+**Description:** This endpoint accepts an already processed image from the client as a base64-encoded string. The image should already be resized and converted to WebP format on the device. The endpoint uploads the provided image to Firebase Storage under the path `product-images/{storeName}/{productId}.webp` and returns a public URL.
+
+**Request Body (Content-Type: application/json):**
+```
+{
+  "imageData": "base64-encoded string of processed image in webp format",
+  "storeName": "StoreName",
+  "productId": "unique-product-id"
+}
+```
+
+**Response:**
+- **Success (200):** Returns a JSON object containing the public URL:
+```
+{
+  "url": "https://storage.googleapis.com/keyp-51c12.firebasestorage.app/product-images/StoreName/unique-product-id.webp"
+}
+```
+- **Errors:**
+  - 400 Bad Request: Missing required fields.
+  - 405 Method Not Allowed: If the request method is not POST.
+  - 500 Internal Server Error: If upload fails.
+
+<!-- End of new section -->

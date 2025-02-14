@@ -868,3 +868,5 @@ export const getApiDocs = onRequest({ region: 'europe-west1' }, async (req: Requ
         res.status(500).json({ error: 'Failed to load documentation' });
     }
 });
+
+export { uploadImage } from './routes/uploadImage';
